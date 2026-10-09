@@ -1,0 +1,31 @@
+# Render Blueprint: creates the BPO Readiness web service.
+# The database is separate (Supabase or Neon); paste its URL into DATABASE_URL.
+services:
+  - type: web
+    name: bpo-readiness
+    runtime: node
+    rootDir: server
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/config
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        sync: false
+      - key: BASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: PAYMENTS_PROVIDER
+        value: mock
+      - key: PAYMENTS_WEBHOOK_SECRET
+        generateValue: true
+      - key: PAYMONGO_SECRET_KEY
+        sync: false
+      - key: PRICE_PESOS
+        value: "799"
+      - key: EMAIL_DRIVER
+        value: log
+      - key: SMS_DRIVER
+        value: log

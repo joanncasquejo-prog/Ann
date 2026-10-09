@@ -1,0 +1,22 @@
+{
+  "name": "bpo-readiness-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Booking, payments, surveys and dashboards for BPO Readiness live classes",
+  "type": "commonjs",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "migrate": "node scripts/migrate.js",
+    "create-owner": "node scripts/create-owner.js",
+    "seed-demo": "node scripts/seed-demo.js",
+    "test": "bash scripts/test.sh"
+  },
+  "dependencies": {
+    "express": "4.21.2",
+    "pg": "8.13.1"
+  }
+}

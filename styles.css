@@ -429,6 +429,7 @@ details p { color: var(--muted); margin: 12px 0 0; }
 .d-bar-in { display: flex; justify-content: space-between; align-items: center; height: 56px; gap: 12px; }
 .d-back { background: none; border: 0; font: 500 .92rem var(--sans); color: var(--d-blue); cursor: pointer; padding: 0; }
 .d-pill { font-size: .74rem; font-weight: 600; color: var(--d-warn); background: var(--d-warn-soft); border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
+.d-pill-inline { display: inline-block; margin-top: 8px; }
 .d-main { padding-block: 32px 64px; display: grid; gap: 20px; }
 .d-main > * { min-width: 0; }
 .d-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
@@ -551,3 +552,31 @@ details p { color: var(--muted); margin: 12px 0 0; }
   .d-pending li, .d-upcoming li { grid-template-columns: 1fr auto; }
   .d-pending li .d-sub { display: none; }
 }
+
+/* ---------- Live app pages (server) ---------- */
+.app-single { padding-top: 32px; padding-bottom: 64px; max-width: 860px; }
+.admin-tabs { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.admin-tabs button { background: none; border: 0; font: 500 .88rem var(--sans); color: var(--muted); padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+.admin-tabs button.on { background: var(--accent-soft); color: var(--accent); }
+.admin-tabs .admin-signout { color: var(--error); }
+#page:has(#main .admin-table) { max-width: 1120px; }
+.admin-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.admin-form { max-width: none; }
+.admin-form input, .admin-form select, .admin-input, .admin-table select { font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; width: 100%; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.admin-table th { text-align: left; font-size: .75rem; color: var(--muted); padding: 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.admin-table td { padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.admin-table .n { text-align: right; font-variant-numeric: tabular-nums; }
+.admin-actions { white-space: nowrap; }
+.admin-actions .link-btn + .link-btn { margin-left: 12px; }
+.admin-sub { background: var(--bg-alt); }
+.admin-log { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; font-size: .88rem; }
+.admin-log li { display: grid; gap: 2px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.admin-log pre { margin: 4px 0 0; white-space: pre-wrap; font: .82rem/1.5 var(--sans); color: var(--muted); }
+.login { margin: 40px auto; max-width: 380px; }
+.roster-actions { display: inline-flex; gap: 6px; }
+.panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.certificate { border: 2px solid var(--gold); border-radius: var(--radius); padding: 48px 32px; text-align: center; background: var(--card); }
+.certificate h1 { margin-bottom: 24px; }
+.cert-name { font-family: var(--serif); font-size: 2rem; color: var(--accent); margin: 8px 0 16px; }
+@media (max-width: 720px) { .admin-grid { grid-template-columns: 1fr; } }

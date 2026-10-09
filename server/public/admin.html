@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Owner admin · BPO Readiness</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app-bar"><div class="container app-bar-inner">
+    <a class="brand" href="/"><span class="brand-mark">B</span> BPO Readiness</a>
+    <nav class="admin-tabs" id="tabs" hidden>
+      <button data-tab="dashboard">Dashboard</button><button data-tab="classes">Classes</button><button data-tab="leaders">Leaders</button><button data-tab="codes">Referral codes</button><button data-tab="activity">Activity</button>
+      <button data-act="logout" class="admin-signout">Sign out</button>
+    </nav>
+  </div></div>
+  <div id="dash-root" class="dash" hidden></div>
+  <main class="container app-single" id="page"><div class="app-main" id="main"><p class="muted">Loading…</p></div></main>
+  <script src="/common.js"></script>
+  <script src="/dashboard-view.js"></script>
+  <script src="/login.js"></script>
+  <script src="/admin.js"></script>
+</body>
+</html>

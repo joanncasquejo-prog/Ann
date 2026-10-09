@@ -22,5 +22,7 @@ Static HTML/CSS/JS with no build step. To run it locally, open `index.html` or r
 Open with `index.html#dashboard` or the button in the test panel. It combines seeded sample data for the last 4 weeks with your test bookings and shows: alerts, profit after tax, students per class, NPS, leader ratings, survey completion, cancellations, no-shows, refunds, a profit and loss summary, the VAT threshold pace, commission per referral code, leader payouts and ratings, latest comments, pending surveys and upcoming classes at risk.
 - Test data is kept in the browser's localStorage and can be cleared with "Reset test".
 
-## Not yet built
-Real payments (a PayMongo, Xendit or Dragonpay merchant account plus a webhook server), real SMS and email, a shared class schedule and seat count on a server, and Zoom link generation.
+## Live server (`server/`)
+The real booking system: PostgreSQL database, PayMongo payments with signed webhooks, scheduled checks, the required survey, an owner admin page (`/admin`) and a leader portal (`/leader`). It serves these same marketing pages with a live booking script. See `server/README.md` for setup and deployment (`render.yaml`).
+
+The files in the repository root (`app.js`, `dashboard.js`) are the browser-only test version used for the shared preview link.
