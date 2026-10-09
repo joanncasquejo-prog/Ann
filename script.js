@@ -40,13 +40,13 @@ form.addEventListener("submit", (e) => {
   let title, text;
   if (pct >= 80) {
     title = "You're close to interview-ready.";
-    text = "You have a strong foundation. A few full mock runs will sharpen your answers before the real interview.";
+    text = "You have a strong foundation. A live class with real feedback will sharpen your answers before the real interview.";
   } else if (pct >= 50) {
     title = "You're almost there.";
-    text = "You have solid strengths. Focus your practice on the areas you rated lowest; the mock call and English stages are a good place to start.";
+    text = "You have solid strengths. Focus on the areas you rated lowest. A live mock call with a trainer is a fast way to find what to fix.";
   } else {
     title = "You're building your foundation.";
-    text = "Everyone starts somewhere. Regular practice with feedback is the fastest way to build confidence. Start with the screening and English stages.";
+    text = "Everyone starts somewhere. Practice with feedback is the fastest way to build confidence. A live class covers every stage of hiring in 3 hours.";
   }
 
   document.getElementById("score").textContent = pct;
