@@ -12,7 +12,7 @@ Static HTML/CSS/JS with no build step. To run it locally, open `index.html` or r
 ## Test mode (`app.js`)
 "Book a seat" opens a test-mode booking app that runs in the browser. No real money, SMS or email is involved:
 - Sample schedule (Philippine time) with live seat counts, a 10-seat cap and full classes.
-- Booking details with separate Terms and Privacy consent, then checkout with GCash, Maya, card or over-the-counter through a simulated gateway. A seat is confirmed only after the simulated payment-confirmed message from the gateway.
+- Booking details with an optional referral code (counted toward a ₱100 commission once the class runs with no refund), separate Terms and Privacy consent, then checkout with GCash, Maya, card or over-the-counter through a simulated gateway. A seat is confirmed only after the simulated payment-confirmed message from the gateway.
 - Over-the-counter payments hold the seat for 24 hours, then release it.
 - Rules: full refund until 48 hours before class, one free reschedule until 24 hours before, a minimum of 5 students checked 48 hours before (otherwise refund or free move), class link sent 24 hours before, no-shows forfeit the seat.
 - Leader view with the class roster and attendance marking.

@@ -156,6 +156,7 @@
         <label for="d-name">Full name (as it will appear in class)<input id="d-name" name="name" autocomplete="name" value="${esc(b.name)}" required></label>
         <label for="d-email">Email<input id="d-email" name="email" type="email" autocomplete="email" value="${esc(b.email)}" required><small>Your receipt and Zoom link go here.</small></label>
         <label for="d-mobile">PH mobile number<input id="d-mobile" name="mobile" inputmode="tel" placeholder="0917 123 4567" required><small>For class reminders.</small></label>
+        <label for="d-ref">Referral code (optional)<input id="d-ref" name="ref" autocapitalize="characters" value="${esc(b.ref || "")}" placeholder="e.g. ANNE100"></label>
         <label class="check" for="d-terms"><input id="d-terms" type="checkbox" name="terms"> I agree to the <a href="terms.html" target="_blank">Terms of Service</a>, including that this seat is for me only.</label>
         <label class="check" for="d-privacy"><input id="d-privacy" type="checkbox" name="privacy"> I have read the <a href="privacy.html" target="_blank">Privacy Notice</a>.</label>
         <p class="form-error" id="d-error" role="alert"></p>
@@ -169,9 +170,11 @@
     if (!d.name.trim()) return err("Enter your full name.");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) return err("Enter a valid email address.");
     if (!m) return err("Enter a PH mobile number like 0917 123 4567.");
+    const ref = (d.ref || "").trim().toUpperCase();
+    if (ref && !/^[A-Z0-9]{3,20}$/.test(ref)) return err("Referral codes use 3–20 letters and numbers only.");
     if (!d.terms) return err("Tick the Terms of Service box to continue.");
     if (!d.privacy) return err("Tick the Privacy Notice box to continue.");
-    S.buyer = { name: d.name.trim(), email: d.email.trim(), mobile: "+63" + m[1] };
+    S.buyer = { name: d.name.trim(), email: d.email.trim(), mobile: "+63" + m[1], ref };
     S.step = "pay";
     render();
   }
@@ -228,7 +231,7 @@
       </div>`;
   }
   function createBooking(status) {
-    S.booking = { ref: S.order.ref, classId: S.pick, status, method: S.order.method, rescheduled: false, created: now(), holdUntil: now() + DAY };
+    S.booking = { ref: S.order.ref, classId: S.pick, status, method: S.order.method, referral: S.buyer.ref || null, rescheduled: false, created: now(), holdUntil: now() + DAY };
     S.step = "booking";
   }
   function confirmPaid() {
@@ -236,6 +239,7 @@
     b.status = "paid"; b.paidAt = now();
     const c = cls(b.classId);
     log(`Webhook payment.paid received. Signature verified. ${b.ref} confirmed: seat ${seatsTaken(c)} of ${SEATS}.`);
+    if (b.referral) log(`Referral code ${b.referral} recorded on ${b.ref}. Commission counts once the class runs with no refund.`);
     email(`Official receipt ${b.ref}: BPO Readiness Live Class, ${fmtWhen(c.start)}, ₱${PRICE}.00 paid by ${b.method.toUpperCase()}.`);
     sms(`BPO Readiness: you're booked for ${fmtWhen(c.start)}. Ref ${b.ref}. Zoom link arrives 24h before class.`);
     S.notice = { kind: "ok", text: "Payment confirmed. Your seat is booked." };
@@ -267,6 +271,7 @@
       ${live && c.cancelled === false ? `
         <ul class="kv panel-kv">
           <li><span>Student</span><span>${esc(S.buyer.name)}</span></li>
+          ${b.referral ? `<li><span>Referral code</span><span>${esc(b.referral)}</span></li>` : ""}
           <li><span>Seats filled</span><span>${seatsTaken(c)} of ${SEATS}</span></li>
           <li><span>Zoom link</span><span>${b.linkSent ? "Sent to your email" : "Emailed 24 hours before class"}</span></li>
           <li><span>Reschedule</span><span>${b.rescheduled ? "Used" : h >= 24 ? "1 free, until 24h before" : "Closed"}</span></li>
@@ -377,8 +382,8 @@
     "new-booking": () => { S.booking = null; S.step = "schedule"; S.notice = null; },
     roster: (el) => { rosterFor = el.dataset.id; },
     "close-roster": () => { rosterFor = null; },
-    "mark-attended": () => { S.booking.status = "attended"; log(`Leader marked ${S.buyer.name} as attended.`); rosterFor = null; S.step = "booking"; },
-    "mark-noshow": () => { S.booking.status = "noshow"; log(`Leader marked ${S.buyer.name} as a no-show. Seat forfeited, no refund.`); rosterFor = null; S.step = "booking"; },
+    "mark-attended": () => { S.booking.status = "attended"; log(`Leader marked ${S.buyer.name} as attended.`); if (S.booking.referral) log(`Class ran with no refund: ₱100 commission counted for code ${S.booking.referral}.`); rosterFor = null; S.step = "booking"; },
+    "mark-noshow": () => { S.booking.status = "noshow"; log(`Leader marked ${S.buyer.name} as a no-show. Seat forfeited, no refund.`); if (S.booking.referral) log(`Seat was paid and not refunded: ₱100 commission counted for code ${S.booking.referral}.`); rosterFor = null; S.step = "booking"; },
     "t-day": () => { S.offsetH += 24; log("Test: 1 day passed."); },
     "t-49": () => { jumpTo(49); log("Test: jumped to 49 hours before class."); },
     "t-47": () => { jumpTo(47); log("Test: jumped to 47 hours before class."); },
