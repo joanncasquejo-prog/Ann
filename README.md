@@ -1,6 +1,6 @@
 # BPO Readiness
 
-Website for BPO Readiness: a 3-hour live online class led by a hired BPO trainer. ₱599 per seat, maximum 10 students per class.
+Website for BPO Readiness: a 3-hour live online class led by a BPO Experience Leader (someone who has led BPO agent teams). ₱599 per seat, maximum 10 students per class.
 
 ## Pages
 - `index.html`: home page with the class outline, pricing, a free readiness check, class policies and FAQ
@@ -15,7 +15,7 @@ Static HTML/CSS/JS with no build step. To run it locally, open `index.html` or r
 - Booking details with separate Terms and Privacy consent, then checkout with GCash, Maya, card or over-the-counter through a simulated gateway. A seat is confirmed only after the simulated payment-confirmed message from the gateway.
 - Over-the-counter payments hold the seat for 24 hours, then release it.
 - Rules: full refund until 48 hours before class, one free reschedule until 24 hours before, a minimum of 5 students checked 48 hours before (otherwise refund or free move), class link sent 24 hours before, no-shows forfeit the seat.
-- Trainer view with the class roster and attendance marking.
+- Leader view with the class roster and attendance marking.
 - Test data is kept in the browser's localStorage and can be cleared with "Reset test".
 
 ## Not yet built

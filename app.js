@@ -1,10 +1,10 @@
 /* BPO Readiness test-mode booking: class schedule with 10-seat limit,
-   simulated checkout, reschedule/refund rules and a trainer roster.
+   simulated checkout, reschedule/refund rules and a class leader roster.
    No real payment, SMS or email is sent. */
 (() => {
   const HOUR = 3600000, DAY = 24 * HOUR;
   const PRICE = 599, SEATS = 10, MIN_RUN = 5;
-  const STORE_KEY = "bpo-readiness-classes-test-v1";
+  const STORE_KEY = "bpo-readiness-classes-test-v2";
   const SAMPLE_NAMES = ["Bea R.", "Carlo M.", "Denise T.", "Enzo P.", "Fritz L.", "Gwen S.", "Hannah D.", "Ivan C.", "Jas A.", "Kyla B."];
 
   /* Sample schedule, built relative to the day the test starts so it never goes stale. */
@@ -22,7 +22,7 @@
       { id: "c2", start: at(sat, 9), taken: 10 },
       { id: "c3", start: at(sat, 13), taken: 3 },
       { id: "c4", start: at(sun + 7, 9), taken: 0 },
-    ].sort((a, b) => a.start - b.start).map((c) => ({ ...c, trainer: "BPO trainer (to be announced)", cancelled: false }));
+    ].sort((a, b) => a.start - b.start).map((c) => ({ ...c, leader: "BPO Experience Leader (to be announced)", cancelled: false }));
   }
 
   const fresh = () => {
@@ -136,7 +136,7 @@
           const left = seatsLeft(c), full = left <= 0;
           return `<li class="class-card ${full ? "full" : ""}">
             <div class="class-when"><strong>${fmtDay(c.start)}</strong><span>${fmtTime(c.start)}–${fmtTime(c.start + 3 * HOUR)}</span></div>
-            <div class="class-info"><span class="muted">${esc(c.trainer)}</span>
+            <div class="class-info"><span class="muted">${esc(c.leader)}</span>
               <span class="seat-meter" aria-label="${seatsTaken(c)} of ${SEATS} seats taken">${Array.from({ length: SEATS }, (_, i) => `<i class="${i < seatsTaken(c) ? "on" : ""}"></i>`).join("")}</span>
               <span class="seats-left ${left <= 2 && !full ? "low" : ""}">${full ? "Full" : `${left} seat${left === 1 ? "" : "s"} left`}</span></div>
             <button class="btn ${full ? "btn-ghost" : "btn-primary"} btn-sm" data-act="${rescheduling ? "do-reschedule" : "pick"}" data-id="${c.id}" ${full ? "disabled" : ""}>${full ? "Full" : rescheduling ? "Move here" : "Book · ₱599"}</button>
@@ -254,7 +254,7 @@
     const inClass = live && h <= 0 && h > -3;
     return `
       <div class="dash-head">
-        <div><p class="eyebrow">My booking · ${b.ref}</p><h1 class="app-title">${fmtDay(c.start)}</h1><p class="muted">${fmtTime(c.start)}–${fmtTime(c.start + 3 * HOUR)} · ${esc(c.trainer)}</p></div>
+        <div><p class="eyebrow">My booking · ${b.ref}</p><h1 class="app-title">${fmtDay(c.start)}</h1><p class="muted">${fmtTime(c.start)}–${fmtTime(c.start + 3 * HOUR)} · ${esc(c.leader)}</p></div>
         <span class="status-chip ${["paid", "attended"].includes(b.status) ? "s-active" : ""}">${c.cancelled && b.status === "paid" ? "Class cancelled" : label}</span>
       </div>
       ${b.status === "pending" ? `
@@ -289,20 +289,20 @@
       ${live && !c.cancelled && !canCancelRefund ? `<p class="fine">Cancellations with a refund close 48 hours before class.</p>` : ""}`;
   }
 
-  /* ---------- trainer roster ---------- */
+  /* ---------- leader roster ---------- */
   function renderRoster() {
     const c = cls(rosterFor);
     const names = SAMPLE_NAMES.slice(0, c.taken).map((n) => ({ name: n, note: "Paid" }));
     if (mine(c)) names.push({ name: S.buyer.name, note: S.booking.status === "pending" ? "Awaiting OTC payment" : "Paid", you: true });
     return `
       <button class="link-btn" data-act="close-roster">← Back</button>
-      <p class="eyebrow">Trainer view</p>
+      <p class="eyebrow">Leader view</p>
       <h1 class="app-title">Class roster</h1>
       <p class="muted">${fmtWhen(c.start)} · ${names.length} of ${SEATS} seats${c.cancelled ? " · cancelled" : ""}</p>
       <ul class="roster">${names.map((n) => `<li><span>${esc(n.name)}${n.you ? " (you)" : ""}</span><span class="muted">${n.note}</span></li>`).join("") || `<li class="muted">No students yet.</li>`}</ul>
       ${mine(c) && S.booking.status === "paid" && hoursUntil(c) <= 0 ? `
         <div class="btn-row"><button class="btn btn-primary" data-act="mark-attended">Mark you as attended</button><button class="btn btn-ghost" data-act="mark-noshow">Mark you as no-show</button></div>` : ""}
-      <p class="fine">In the live version, the trainer uses this list to admit only booked names from the Zoom waiting room.</p>`;
+      <p class="fine">In the live version, the BPO Experience Leader uses this list to admit only booked names from the Zoom waiting room.</p>`;
   }
 
   /* ---------- test panel ---------- */
@@ -327,7 +327,7 @@
         </div>
       </div>
       <div class="tp-block">
-        <h3>Trainer view</h3>
+        <h3>Leader view</h3>
         <ul class="roster-links">${S.classes.filter((x) => x.start > now() - 3 * HOUR).map((x) => `<li><button class="link-btn" data-act="roster" data-id="${x.id}">${fmtDay(x.start)}, ${fmtTime(x.start)}</button><span class="muted">${seatsTaken(x)}/${SEATS}${x.cancelled ? " · cancelled" : ""}</span></li>`).join("")}</ul>
       </div>
       <div class="tp-block">
@@ -377,8 +377,8 @@
     "new-booking": () => { S.booking = null; S.step = "schedule"; S.notice = null; },
     roster: (el) => { rosterFor = el.dataset.id; },
     "close-roster": () => { rosterFor = null; },
-    "mark-attended": () => { S.booking.status = "attended"; log(`Trainer marked ${S.buyer.name} as attended.`); rosterFor = null; S.step = "booking"; },
-    "mark-noshow": () => { S.booking.status = "noshow"; log(`Trainer marked ${S.buyer.name} as a no-show. Seat forfeited, no refund.`); rosterFor = null; S.step = "booking"; },
+    "mark-attended": () => { S.booking.status = "attended"; log(`Leader marked ${S.buyer.name} as attended.`); rosterFor = null; S.step = "booking"; },
+    "mark-noshow": () => { S.booking.status = "noshow"; log(`Leader marked ${S.buyer.name} as a no-show. Seat forfeited, no refund.`); rosterFor = null; S.step = "booking"; },
     "t-day": () => { S.offsetH += 24; log("Test: 1 day passed."); },
     "t-49": () => { jumpTo(49); log("Test: jumped to 49 hours before class."); },
     "t-47": () => { jumpTo(47); log("Test: jumped to 47 hours before class."); },

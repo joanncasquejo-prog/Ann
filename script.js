@@ -43,7 +43,7 @@ form.addEventListener("submit", (e) => {
     text = "You have a strong foundation. A live class with real feedback will sharpen your answers before the real interview.";
   } else if (pct >= 50) {
     title = "You're almost there.";
-    text = "You have solid strengths. Focus on the areas you rated lowest. A live mock call with a trainer is a fast way to find what to fix.";
+    text = "You have solid strengths. Focus on the areas you rated lowest. A live mock call with a BPO leader is a fast way to find what to fix.";
   } else {
     title = "You're building your foundation.";
     text = "Everyone starts somewhere. Practice with feedback is the fastest way to build confidence. A live class covers every stage of hiring in 3 hours.";
