@@ -32,7 +32,7 @@
         <h1>Practise the interview<br>until it feels easy.</h1>
         <p class="lead">An AI interviewer takes you through every stage of BPO hiring: screening, English assessment, HR questions, a mock call, and the final interview. After each session you get a score and specific fixes.</p>
         <div class="hero-actions">
-          <a href="#pricing" class="btn btn-primary">Get the Solo Pass · ₱599</a>
+          <a href="#app" class="btn btn-primary" data-open-app>Get the Solo Pass · ₱599</a>
           <a href="#check" class="btn btn-ghost">Try the free readiness check</a>
         </div>
         <p class="hero-note">Unlimited mock interviews for 15 days · GCash, Maya, cards, OTC</p>
@@ -110,7 +110,8 @@
               <li>Use on up to 2 registered devices (e.g. phone + laptop)</li>
               <li>Progress and reports kept for 12 months after expiry</li>
             </ul>
-            <a href="#" class="btn btn-primary btn-block" aria-disabled="true" onclick="return false">Checkout opening soon</a>
+            <a href="#app" class="btn btn-primary btn-block" data-open-app>Get the Solo Pass</a>
+            <p class="test-note">Test mode: checkout is simulated and no money is charged.</p>
             <p class="fine">Pay with GCash, Maya, debit/credit card, or over the counter (7-Eleven, Cebuana). Over-the-counter payments activate once the payment is confirmed. Official receipt sent by email.</p>
           </div>
           <div class="price-notes">
@@ -143,7 +144,7 @@
           <h3 id="result-title"></h3>
           <p id="result-text"></p>
           <div class="hero-actions center">
-            <a href="#pricing" class="btn btn-primary">Practise with the Solo Pass</a>
+            <a href="#app" class="btn btn-primary" data-open-app>Practise with the Solo Pass</a>
             <button type="button" id="retake" class="btn btn-ghost">Retake</button>
           </div>
         </div>
@@ -202,7 +203,7 @@
     <section class="cta">
       <div class="container">
         <h2>Walk into your BPO interview prepared.</h2>
-        <a href="#pricing" class="btn btn-light">See the Solo Pass</a>
+        <a href="#app" class="btn btn-light" data-open-app>Get the Solo Pass</a>
       </div>
     </section>
   </main>
@@ -218,6 +219,9 @@
     </div>
   </footer>
 
+  <div id="app" class="app" hidden></div>
+
   <script src="script.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
