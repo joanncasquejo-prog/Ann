@@ -3,8 +3,15 @@
    No real payment, SMS or email is sent. */
 (() => {
   const HOUR = 3600000, DAY = 24 * HOUR;
-  const PRICE = 599, SEATS = 10, MIN_RUN = 5;
-  const STORE_KEY = "bpo-readiness-classes-test-v2";
+  const PRICE = 799, SEATS = 10, MIN_RUN = 5;
+  const STORE_KEY = "bpo-readiness-classes-test-v3";
+  const SURVEY_ITEMS = [
+    ["q1", "Overall, how would you rate your BPO Experience Leader?", ["Poor", "Excellent"]],
+    ["q2", "The leader explained things clearly.", ["Strongly disagree", "Strongly agree"]],
+    ["q3", "The feedback on my mock call was specific and useful.", ["Strongly disagree", "Strongly agree"]],
+    ["q4", "The leader gave every student a chance to speak.", ["Strongly disagree", "Strongly agree"]],
+    ["q5", "I feel more ready for a BPO interview than before the class.", ["Strongly disagree", "Strongly agree"]],
+  ];
   const SAMPLE_NAMES = ["Bea R.", "Carlo M.", "Denise T.", "Enzo P.", "Fritz L.", "Gwen S.", "Hannah D.", "Ivan C.", "Jas A.", "Kyla B."];
 
   /* Sample schedule, built relative to the day the test starts so it never goes stale. */
@@ -27,7 +34,7 @@
 
   const fresh = () => {
     const t0 = Date.now();
-    return { t0, offsetH: 0, step: "schedule", classes: sampleClasses(t0), pick: null, buyer: null, booking: null, inbox: [], log: [], notice: null };
+    return { t0, offsetH: 0, step: "schedule", classes: sampleClasses(t0), pick: null, buyer: null, booking: null, history: [], inbox: [], log: [], notice: null };
   };
   let S = load() || fresh();
   let rosterFor = null;
@@ -62,6 +69,8 @@
   }
   document.querySelectorAll("[data-open-app]").forEach((el) => el.addEventListener("click", (e) => { e.preventDefault(); openApp(); }));
   if (location.hash === "#app") openApp();
+  window.bpoReadinessState = () => { tick(); save(); return S; };
+  window.bpoOpenApp = openApp;
 
   function render() {
     tick();
@@ -106,6 +115,15 @@
     });
     if (!b) return;
     const c = cls(b.classId);
+    if (b.status === "attended" && !b.survey) {
+      const since = (now() - b.attendedAt) / HOUR;
+      const due = since >= 48 ? 2 : since >= 24 ? 1 : 0;
+      if (due > (b.reminders || 0)) {
+        b.reminders = due;
+        email(`Reminder: your 2-minute class survey is required to get your class notes and certificate of attendance.`);
+        log(`Survey reminder ${due} sent for ${b.ref}.`);
+      }
+    }
     if (b.status === "paid" && !c.cancelled && hoursUntil(c) <= 24 && !b.linkSent) {
       b.linkSent = true;
       email(`Your class is tomorrow, ${fmtWhen(c.start)}. Your personal Zoom link: zoom.us/j/test-${b.ref}. Don't share it; only booked names are admitted.`);
@@ -139,7 +157,7 @@
             <div class="class-info"><span class="muted">${esc(c.leader)}</span>
               <span class="seat-meter" aria-label="${seatsTaken(c)} of ${SEATS} seats taken">${Array.from({ length: SEATS }, (_, i) => `<i class="${i < seatsTaken(c) ? "on" : ""}"></i>`).join("")}</span>
               <span class="seats-left ${left <= 2 && !full ? "low" : ""}">${full ? "Full" : `${left} seat${left === 1 ? "" : "s"} left`}</span></div>
-            <button class="btn ${full ? "btn-ghost" : "btn-primary"} btn-sm" data-act="${rescheduling ? "do-reschedule" : "pick"}" data-id="${c.id}" ${full ? "disabled" : ""}>${full ? "Full" : rescheduling ? "Move here" : "Book · ₱599"}</button>
+            <button class="btn ${full ? "btn-ghost" : "btn-primary"} btn-sm" data-act="${rescheduling ? "do-reschedule" : "pick"}" data-id="${c.id}" ${full ? "disabled" : ""}>${full ? "Full" : rescheduling ? "Move here" : `Book · ₱${PRICE}`}</button>
           </li>`;
         }).join("") || `<li class="muted">No upcoming classes right now.</li>`}
       </ul>`;
@@ -285,13 +303,56 @@
           <div class="btn-row"><button class="btn btn-primary" data-act="free-move">Move to another class</button><button class="btn btn-ghost" data-act="refund">Full refund</button></div>
         </div>` : ""}
       ${b.status === "noshow" ? `<p class="muted">You missed the class without rescheduling, so the seat was forfeited with no refund.</p>` : ""}
-      ${b.status === "attended" ? `<p class="muted">Thanks for joining. Book another class any time.</p>` : ""}
+      ${b.status === "attended" ? (b.survey ? renderThanks(b) : renderSurvey()) : ""}
       <div class="btn-row">
         ${canReschedule ? `<button class="btn btn-primary" data-act="reschedule">Reschedule (free, once)</button>` : ""}
         ${canCancelRefund ? `<button class="btn btn-ghost" data-act="cancel-refund">Cancel and get a full refund</button>` : ""}
         ${["cancelled", "refunded", "expired", "attended", "noshow"].includes(b.status) ? `<button class="btn btn-primary" data-act="new-booking">Book another class</button>` : ""}
       </div>
       ${live && !c.cancelled && !canCancelRefund ? `<p class="fine">Cancellations with a refund close 48 hours before class.</p>` : ""}`;
+  }
+
+  /* ---------- required post-class survey ---------- */
+  function renderSurvey() {
+    const scale = (name, n0, n1, ends, cls = "") => `
+      <div class="scale ${cls}" role="radiogroup">${Array.from({ length: n1 - n0 + 1 }, (_, i) => n0 + i).map((v) =>
+        `<label><input type="radio" name="${name}" value="${v}"><span>${v}</span></label>`).join("")}</div>
+      <div class="scale-ends"><span>${ends[0]}</span><span>${ends[1]}</span></div>`;
+    return `
+      <form id="f-survey" class="panel survey" novalidate>
+        <p class="eyebrow">Required · about 2 minutes</p>
+        <h2>How was your class?</h2>
+        <p class="muted">Complete this survey to get your class notes and certificate of attendance. Your leader sees only combined results, never your individual answers.</p>
+        ${SURVEY_ITEMS.map(([id, q, ends], i) => `<fieldset><legend>${i + 1}. ${q}</legend>${scale(id, 1, 5, ends)}</fieldset>`).join("")}
+        <fieldset><legend>6. How likely are you to recommend BPO Readiness to a friend or family member?</legend>${scale("nps", 0, 10, ["Not at all likely", "Extremely likely"], "nps")}</fieldset>
+        <label for="s-comment" class="survey-comment">7. What should we improve? <span class="muted">(optional)</span><textarea id="s-comment" name="comment" rows="3"></textarea></label>
+        <p class="form-error" id="s-error" role="alert"></p>
+        <button class="btn btn-primary">Submit survey</button>
+      </form>`;
+  }
+  function submitSurvey(f) {
+    const d = Object.fromEntries(new FormData(f));
+    const missing = [...SURVEY_ITEMS.map(([id]) => id), "nps"].filter((k) => d[k] === undefined);
+    if (missing.length) {
+      f.querySelector("#s-error").textContent = `Answer question${missing.length > 1 ? "s" : ""} ${missing.map((k) => k === "nps" ? 6 : Number(k.slice(1))).join(", ")} to submit.`;
+      return;
+    }
+    const b = S.booking;
+    b.survey = { at: now(), nps: Number(d.nps), comment: (d.comment || "").trim().slice(0, 500) };
+    SURVEY_ITEMS.forEach(([id]) => (b.survey[id] = Number(d[id])));
+    log(`Survey submitted for ${b.ref}: leader rating ${b.survey.q1}/5, recommend ${b.survey.nps}/10.`);
+    email(`Thanks for your feedback. Your class notes and certificate of attendance are ready.`);
+    S.notice = { kind: "ok", text: "Thanks! Your class notes and certificate of attendance are unlocked." };
+    render();
+  }
+  function renderThanks(b) {
+    return `
+      <div class="panel">
+        <h2>Thanks for joining</h2>
+        <p class="muted">Survey received on ${fmtDay(b.survey.at)}.</p>
+        <ul class="unlocked"><li>Class notes: introduction template, situation-action-result answer guide, mock-call checklist</li><li>Certificate of attendance for ${esc(S.buyer.name)}</li></ul>
+        <p class="fine">In test mode these are placeholders.</p>
+      </div>`;
   }
 
   /* ---------- leader roster ---------- */
@@ -339,6 +400,7 @@
         <h3>Event log</h3>
         ${S.log.length ? `<ul class="evlog">${S.log.slice(0, 8).map((l) => `<li>${esc(l)}</li>`).join("")}</ul>` : `<p class="muted small">Nothing yet.</p>`}
       </div>
+      <button class="btn btn-ghost btn-sm" data-act="open-dash">Open owner dashboard</button>
       <button class="link-btn danger" data-act="reset">Reset test</button>`;
   }
 
@@ -347,6 +409,7 @@
     const on = (id, fn) => { const f = document.getElementById(id); if (f) f.addEventListener("submit", (e) => { e.preventDefault(); fn(f); }); };
     on("f-details", submitDetails);
     on("f-pay", submitPay);
+    on("f-survey", submitSurvey);
     const mob = document.getElementById("d-mobile");
     if (mob && S.buyer) mob.value = "0" + S.buyer.mobile.slice(3);
   }
@@ -379,16 +442,17 @@
     },
     "cancel-refund": () => { S.booking.status = "refunded"; log(`${S.booking.ref} cancelled more than 48h before class. Full refund issued.`); email(`Your booking ${S.booking.ref} was cancelled. ₱${PRICE}.00 is being refunded.`); S.notice = { kind: "ok", text: "Booking cancelled. Your full refund is on its way." }; },
     refund: () => { S.booking.status = "refunded"; log(`${S.booking.ref} refunded because the class was cancelled.`); email(`Refund of ₱${PRICE}.00 for ${S.booking.ref} is on its way.`); S.notice = { kind: "ok", text: "Full refund issued." }; },
-    "new-booking": () => { S.booking = null; S.step = "schedule"; S.notice = null; },
+    "new-booking": () => { if (S.booking) S.history.push({ ...S.booking, start: cls(S.booking.classId).start, name: S.buyer.name }); S.booking = null; S.step = "schedule"; S.notice = null; },
     roster: (el) => { rosterFor = el.dataset.id; },
     "close-roster": () => { rosterFor = null; },
-    "mark-attended": () => { S.booking.status = "attended"; log(`Leader marked ${S.buyer.name} as attended.`); if (S.booking.referral) log(`Class ran with no refund: ₱100 commission counted for code ${S.booking.referral}.`); rosterFor = null; S.step = "booking"; },
+    "mark-attended": () => { S.booking.status = "attended"; S.booking.attendedAt = now(); email(`Thanks for joining today's class. Your 2-minute survey is required to get your class notes and certificate of attendance.`); log(`Required survey sent to ${S.buyer.name}.`); log(`Leader marked ${S.buyer.name} as attended.`); if (S.booking.referral) log(`Class ran with no refund: ₱100 commission counted for code ${S.booking.referral}.`); rosterFor = null; S.step = "booking"; },
     "mark-noshow": () => { S.booking.status = "noshow"; log(`Leader marked ${S.buyer.name} as a no-show. Seat forfeited, no refund.`); if (S.booking.referral) log(`Seat was paid and not refunded: ₱100 commission counted for code ${S.booking.referral}.`); rosterFor = null; S.step = "booking"; },
     "t-day": () => { S.offsetH += 24; log("Test: 1 day passed."); },
     "t-49": () => { jumpTo(49); log("Test: jumped to 49 hours before class."); },
     "t-47": () => { jumpTo(47); log("Test: jumped to 47 hours before class."); },
     "t-23": () => { jumpTo(23); log("Test: jumped to 23 hours before class."); },
     "t-start": () => { jumpTo(0); log("Test: class is starting."); },
+    "open-dash": () => { closeApp(); window.bpoOpenDashboard?.(); },
     reset: () => { S = fresh(); rosterFor = null; log("Test reset."); },
   };
   root.addEventListener("click", (e) => {
